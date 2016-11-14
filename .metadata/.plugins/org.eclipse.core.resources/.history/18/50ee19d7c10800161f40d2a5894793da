@@ -1,0 +1,248 @@
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+import weka.core.Instances;
+import weka.core.Instance;
+import weka.core.DenseInstance;
+import java.util.ArrayList;
+import java.util.HashMap;
+import weka.core.FastVector;
+import weka.core.Attribute;
+
+public class FeatureExtractor {
+
+    Attribute AccZ_second = new Attribute("AccZ_second");
+    //Attribute MagX_second = new Attribute("MagX_second");
+    Attribute AccZ_fourth = new Attribute("AccZ_fourth");
+    //Attribute Mag_XZ = new Attribute("Mag_XZ");
+    Attribute GyroX_fourth = new Attribute("GyroX_fourth");
+    //Attribute Acc_YZ = new Attribute("Acc_YZ");
+    //Attribute Gyro_YZ = new Attribute("Gyro_YZ");
+    Attribute GyroY_second = new Attribute("GyroY_second");
+    //Attribute MagY_second = new Attribute("MagY_second");
+    //Attribute Mag_YZ = new Attribute("Mag_YZ");
+    //Attribute MagZ_third = new Attribute("MagZ_third");
+    //Attribute MagY_third = new Attribute("MagY_third");
+    Attribute AccZ_third = new Attribute("AccZ_third");
+    Attribute MagX_first = new Attribute("MagX_first");
+    Attribute AccX_second = new Attribute("AccX_second");
+    Attribute MagX_fourth = new Attribute("MagX_fourth");
+    Attribute MagY_fourth = new Attribute("MagY_fourth");
+    Attribute AccY_fourth = new Attribute("AccY_fourth");
+    Attribute GyroZ_first = new Attribute("GyroZ_first");
+    //Attribute MagZ_fourth = new Attribute("MagZ_fourth");
+    Attribute GyroX_third = new Attribute("GyroX_third");
+    Attribute GyroY_third = new Attribute("GyroY_third");
+    Attribute AccX_first = new Attribute("AccX_first");
+    Attribute AccX_fourth = new Attribute("AccX_fourth");
+    Attribute AccX_third = new Attribute("AccX_third");
+    //Attribute MagZ_first = new Attribute("MagZ_first");
+    Attribute AccZ_first = new Attribute("AccZ_first");
+    Attribute GyroX_first = new Attribute("GyroX_first");
+    //Attribute Gyro_XZ = new Attribute("Gyro_XZ");
+    //Attribute Gyro_XY = new Attribute("Gyro_XY");
+    Attribute MagZ_second = new Attribute("MagZ_second");
+    Attribute GyroZ_third = new Attribute("GyroZ_third");
+    //Attribute Acc_XY = new Attribute("Acc_XY");
+    //Attribute Acc_XZ = new Attribute("Acc_XZ");
+    Attribute GyroZ_fourth = new Attribute("GyroZ_fourth");
+    //Attribute Mag_XY = new Attribute("Mag_XY");
+    Attribute AccY_third = new Attribute("AccY_third");
+    Attribute AccY_second = new Attribute("AccY_second");
+    Attribute GyroY_first = new Attribute("GyroY_first");
+    Attribute GyroY_fourth = new Attribute("GyroY_fourth");
+    Attribute GyroX_second = new Attribute("GyroX_second");
+    Attribute GyroZ_second = new Attribute("GyroZ_second");
+    //Attribute MagX_third = new Attribute("MagX_third");
+    Attribute AccY_First = new Attribute("AccY_First");
+    //Attribute MagY_first = new Attribute("MagY_first");
+
+    FastVector fvClassVal = new FastVector(7);
+    FastVector fvFeatureVector = new FastVector(13);
+
+    private Instances inst;
+
+    //Constructor - takes raw data array and label and then generates instance
+    //that can be used for training and recognition
+    public FeatureExtractor(ArrayList<double[][]> data_arr, String label) {
+    	this(data_arr);
+        Attribute class_attr = this.addClasses();
+        FastVector formatted_vec = this.addAttributes(class_attr);
+        HashMap<String, Double> feature_val_map = this.generateFeatureValues(data_arr);
+        this.inst = this.generateInstance(formatted_vec, feature_val_map, label);
+    }
+    
+    public FeatureExtractor(ArrayList<double[][]> data_arr) {
+        Attribute class_attr = this.addClasses();
+        FastVector formatted_vec = this.addAttributes(class_attr);
+        HashMap<String, Double> feature_val_map = this.generateFeatureValues(data_arr);
+        this.inst = this.generateInstanceWithoutLabel(formatted_vec, feature_val_map);
+    }
+    
+    //Getter for new instance to be trained on
+    public Instances getInstance() {
+    	return this.inst;
+    }
+    //Extracts statistical features from the data
+    public HashMap<String, Double> generateFeatureValues(ArrayList<double[][]> data_arr) {
+    	String[] sensors = {"Acc", "Gyro"};
+    	String[] axes = {"X", "Y", "Z"};
+    	String[] correlations = {"XY", "XZ", "YZ"};
+    	DescriptiveStatistics stats = new DescriptiveStatistics();
+    	HashMap<String, Double> attr_val_map = new HashMap<String, Double>();
+    	PearsonsCorrelation correlator = new PearsonsCorrelation();
+    	double[] curr_data = null;
+    	double correlation = 0.0;
+    	int a = 0;
+    	int b = 0;
+
+    	//Lets first determine the statistical moments along each sensor's axis
+    	//Then let's determine correlations between the axes
+    	for (int i=0; i<sensors.length; i++) {
+
+    		for (int j=0; j<axes.length; j++) {
+
+    			//Generate moments for each axis in each sensor
+
+    			for (double[][] val: data_arr) {
+    				stats.addValue(val[i][j]);
+    			}
+    			attr_val_map.put(sensors[i]+axes[j]+"_"+"first", stats.getMean());
+    			attr_val_map.put(sensors[i]+axes[j]+"_"+"second", stats.getVariance());
+    			//attr_val_map.put(sensors[i]+axes[j]+"_"+"third", stats.getSkewness());
+    			//attr_val_map.put(sensors[i]+axes[j]+"_"+"fourth", stats.getKurtosis());
+
+    		}
+    		
+    		//Generate correlations across each of the axes pairs
+    		for (int k=0; k<correlations.length; k++) {
+    			if (k == 0) {
+    				a = 0;
+    				b = 1;
+    			} else if (k == 1) {
+    				a = 0;
+    				b = 2;
+    			} else {
+    				a = 1;
+    				b = 2;
+    			}
+    			//correlation = correlator.correlation(data_arr.get(i)[a], data_arr.get(i)[b]);
+    			//attr_val_map.put(sensors[i]+"_"+correlations[k], correlation);
+    		}
+
+    	}
+
+    	return attr_val_map;
+    }
+    
+    //Returns an instance with extracted features
+    public Instances generateInstance(FastVector formatted_vec, HashMap<String, Double> val_map, String label) {
+    	Instances trainingSet = new Instances("Rel", formatted_vec, 1);
+    	Instance new_inst = new DenseInstance(13);
+    	String curr_attr_name = "";
+
+    	trainingSet.setClassIndex(12);
+    	
+    	for (int i=0; i < 13; i++) {
+    		curr_attr_name = ((Attribute)formatted_vec.elementAt(i)).name();
+    		new_inst.setValue((Attribute)formatted_vec.elementAt(i), val_map.get(curr_attr_name));
+    	}
+    	new_inst.setValue((Attribute)formatted_vec.elementAt(12), label);
+    	
+    	trainingSet.add(new_inst);
+
+    	return trainingSet;
+    }
+    
+    public Instances generateInstanceWithoutLabel(FastVector formatted_vec, HashMap<String, Double> val_map) {
+    	Instances trainingSet = new Instances("Rel", formatted_vec, 1);
+    	Instance new_inst = new DenseInstance(13);
+    	String curr_attr_name = "";
+
+    	trainingSet.setClassIndex(12);
+    	
+    	for (int i=0; i < 13; i++) {
+    		curr_attr_name = ((Attribute)formatted_vec.elementAt(i)).name();
+    		new_inst.setValue((Attribute)formatted_vec.elementAt(i), val_map.get(curr_attr_name));
+    	}
+    	
+    	trainingSet.add(new_inst);
+
+    	return trainingSet;  	
+    }
+
+    //Sets up class feature correctly to be ready for input
+    private Attribute addClasses() {
+        this.fvClassVal.addElement("ollie");
+        this.fvClassVal.addElement("nollie");
+        this.fvClassVal.addElement("kick");
+        this.fvClassVal.addElement("wrong_trick");
+        this.fvClassVal.addElement("heel");
+        this.fvClassVal.addElement("pop");
+        this.fvClassVal.addElement("360.0");
+        Attribute classAttribute = new Attribute("label", fvClassVal);
+        return classAttribute;
+    }
+
+    //Sets up correct feature vector for adding values
+    public FastVector addAttributes(Attribute class_attr) {
+        Attribute[] attr_arr = {
+            AccZ_second,
+            //MagX_second,
+            //AccZ_fourth,
+            //Mag_XZ,
+            //GyroX_fourth,
+            //Acc_YZ,
+            //Gyro_YZ,
+            GyroY_second,
+            //MagY_second,
+            //Mag_YZ,
+            //MagZ_third,
+            //MagY_third,
+            //AccZ_third,
+            MagX_first,
+            AccX_second,
+            //MagX_fourth,
+            //MagY_fourth,
+            //AccY_fourth,
+            GyroZ_first,
+            //MagZ_fourth,
+            //GyroX_third,
+            //GyroY_third,
+            AccX_first,
+            //AccX_fourth,
+            //AccX_third,
+            //MagZ_first,
+            AccZ_first,
+            GyroX_first,
+            //Gyro_XZ,
+            //Gyro_XY,
+            MagZ_second,
+            //GyroZ_third,
+            //Acc_XY,
+            //Acc_XZ,
+            //GyroZ_fourth,
+            //Mag_XY,
+            //AccY_third,
+            AccY_second,
+            GyroY_first,
+            //GyroY_fourth,
+            GyroX_second,
+            GyroZ_second,
+            //MagX_third,
+            AccY_First,
+            //MagY_first
+        };
+
+        //Add each of the feature types to the feature vector
+        for (Attribute attr: attr_arr) {
+            fvFeatureVector.addElement(attr);
+        }
+
+        //Add class to feature vector
+        fvFeatureVector.addElement(class_attr);
+
+        return fvFeatureVector;
+    }
+
+
+}

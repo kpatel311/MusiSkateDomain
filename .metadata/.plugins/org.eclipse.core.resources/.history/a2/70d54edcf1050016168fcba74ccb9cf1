@@ -1,0 +1,34 @@
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.SerializationHelper;
+import weka.classifiers.Classifier;
+import weka.classifiers.bayes.NaiveBayesUpdateable;
+import java.io.File;
+import java.util.ArrayList;
+
+public class NaiveBayesClassifier extends RuntimeException{
+
+    private static final String MODEL_PATH = ".";
+    private static Classifier model = null;
+
+    //Loads the saved model.
+    private void loadModel() {
+    	try {
+        model = (Classifier) SerializationHelper.read("./NB_Original.model");
+    	}
+    }
+
+    //Takes in 2d array of data; internal arrays are acc, gyro, and mag
+    public NaiveBayesClassifier(double[][] acc, double[][] gyro, double[][] mag, String label) {
+
+        this.loadModel();
+        ArrayList<double[][]> data_arr = new ArrayList<double[][]>();
+        data_arr.add(acc);
+        data_arr.add(gyro);
+        data_arr.add(mag);
+        FeatureExtractor extractor = new FeatureExtractor(data_arr, label);
+
+    }
+
+}
+

@@ -1,0 +1,10 @@
+import weka.classifiers.Classifier;
+
+public class kNNClassifier {
+	
+	private static Classifier model = null;
+
+	public void loadModel() {
+		
+	}
+}

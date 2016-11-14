@@ -1,0 +1,11 @@
+import weka.classifiers.Classifier;
+import weka.core.SerializationHelper;
+
+public class kNNClassifier {
+	
+	private Classifier model = null;
+
+	public void loadModel() {
+		this.model = (Classifier) SerializationHelper.read("./NB_Original.model");
+	}
+}

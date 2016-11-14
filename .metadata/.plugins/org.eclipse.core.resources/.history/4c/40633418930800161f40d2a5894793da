@@ -1,0 +1,8 @@
+@RELATION Trick
+
+@ATTRIBUTE sepallength  NUMERIC
+@ATTRIBUTE sepalwidth   NUMERIC
+@ATTRIBUTE petallength  NUMERIC
+@ATTRIBUTE petalwidth   NUMERIC
+@ATTRIBUTE label        {ollie,kick,wrong_trick,heel,pop,360.0}
+  
